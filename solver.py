@@ -1,64 +1,82 @@
 from tkinter import *
+from fractions import Fraction
 from tkinter import ttk
 
-def sel():
-   selection = "" + str(var.get())
-   solveDisplay.config(text = selection)
+#Operation calculations
+def operation(frac1, frac2):
+   if operator.get() == 1:
+      return frac1 + frac2
+   elif operator.get() == 2:
+      return frac1 - frac2
+   elif operator.get() == 3:
+      return frac1 / frac2
+   elif operator.get() == 4:
+      return frac1 * frac2
 
-#erase answer when clicking different operator button
-def erase():
-   solveDisplay.config(text = "")
+#Function when pressing solve butotn
+def solve():
+   num1 = int(num1Entry.get())
+   num2 = int(denom1Entry.get())
+
+   num3 = int(num2Entry.get())
+   num4 = int(denom2Entry.get())
+
+   frac1 = Fraction(num1,num2)
+   frac2 = Fraction(num3, num4)
+   frac3 = Fraction()
+   frac3 = operation(frac1, frac2)
+
+   solveDisplay.config(text = frac3)
 
 
 window = Tk()
 var = IntVar()
-window.geometry("240x100+0+0")
+window.geometry("340x200")
 window.resizable(width=False, height= False)
+
+operator = IntVar()
 
 window.title("Solver")
 
 
 main = Button(window, text = "Main", width = 5)
-main.grid(row = 0, column = 20 , sticky = W)
+main.place(x = 295, y = 0)
 
 
 #make entry box for numerators and denominators
 num1Entry = Entry(window, width = 5)
-num1Entry.grid(row = 0, column = 0, columnspan = 3)
+num1Entry.place(x = 50, y = 20)
 
 denom1Entry = Entry(window, width = 5)
-denom1Entry.grid(row = 2,  columnspan = 3)
+denom1Entry.place(x = 50, y = 50)
 
 num2Entry = Entry(window, width = 5)
-num2Entry.grid(row = 0, column = 3, columnspan =3 )
+num2Entry.place(x = 150, y = 20)
 
 denom2Entry = Entry(window, width = 5)
-denom2Entry.grid(row = 2, column = 3, columnspan =3 )
+denom2Entry.place(x = 150, y = 50)
 
 
 #solve button, when press will solve the given fractions
-solveButton = Button(window, text = "Solve")
-solveButton.grid(row = 3, column = 0, padx = 5)
+solveButton = Button(window, text = "Solve", command = solve)
+solveButton.place(x = 30, y = 120)
 
 #display the answer
 solveDisplay = Label(window, width = 7, bg = "lightgrey")
-solveDisplay.grid(row = 3, column = 3, padx = 10)
+solveDisplay.place(x = 100, y = 120)
 
 #operator buttons, when pressed, will solve using given operator
-plus = Radiobutton(window, text = "+", value = 1)
-plus.grid(row = 3, column = 4, sticky = E)
+plus = Radiobutton(window, text = "+", variable = operator, value = 1)
+plus.place(x = 200, y = 110)
 
-minus = Radiobutton(window, text = "-", value = 2)
-minus.grid(row = 3, column = 5, sticky = W)
+minus = Radiobutton(window, text = "-", variable = operator, value = 2)
+minus.place(x = 230, y = 110)
 
-divide = Radiobutton(window, text = "/", value = 3, command = sel)
-divide.grid(row = 4, column = 4, sticky = E)
+divide = Radiobutton(window, text = "/", variable = operator, value = 3)
+divide.place(x = 200, y = 140)
 
-multiply = Radiobutton(window, text = "*", value = 4, command = erase)
-multiply.grid(row = 4, column = 5, sticky = W)
+multiply = Radiobutton(window, text = "*", variable = operator, value = 4)
+multiply.place(x = 230, y = 140)
 
-
-label = Label(window)
-label.grid(row = 8, column = 0, sticky = W)
 
 window.mainloop()
