@@ -1,4 +1,24 @@
 from tkinter import *
+import sqlite3
+
+def setusername(username, password):
+	connect = sqlite3.connect('FractionSolver.db')
+	login_info = connect.cursor()
+	login_info.execute('''CREATE TABLE login (username text, password text)''') #comment out after first run
+	login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, password))
+	login_info.commit()
+	login_info.close()
+
+#Create table to store grocery information
+#login_info.execute('''CREATE TABLE login (user_name text not null, password text not null)''') #comment out after first run
+
+def getsusers():
+	connect = sqlite3.connect('FractionSolver.db')
+	login_info = connect.cursor()
+	login_info.execute('''SELECT username, password FROM login''')
+	users = login_info.fetchall()
+	connect.close()
+	return users
 
 def getusername():
     text = TextEntry.get()
