@@ -1,6 +1,7 @@
 from tkinter import *
 from fractions import Fraction
 from tkinter import ttk
+import FractionSolver.py
 
 #Operation calculations
 def operation(frac1, frac2):
