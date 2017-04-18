@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+import FractionSolver.py
 
 def sel():
    selection = "" + str(var.get())
