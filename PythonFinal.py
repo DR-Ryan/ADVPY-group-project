@@ -180,6 +180,41 @@ class FractionsHelper:
         print("Display changed")
         print(self.operator)
 
+    def check(self, click):
+        self.userAns = self.answerEntry.get()
+        print(self.answerEntry.get())
+
+        self.num1 = int(self.var1.get())
+        self.num2 = int(self.var2.get())
+        self.num3 = int(self.var3.get())
+        self.num4 = int(self.var4.get())
+
+        self.frac1 = Fraction(self.num1, self.num2)
+        self.frac2 = Fraction(self.num3, self.num4)
+        # self.frac1 = Fraction(1,2)
+        # self.frac2 = Fraction(3,4)
+        self.frac3 = Fraction()
+        self.frac3 = self.operation()
+
+        self.strFrac = str(self.frac3)
+
+        self.strAns = self.answerEntry.get()
+
+        num, denom = self.strAns.split("/")
+        num1 = int(num)
+        denom1 = int(denom)
+        frac4 = Fraction(num1, denom1)
+        print(frac4)
+
+        if self.strAns == self.strFrac:
+            self.corrDisplay.config(text = "Correct")
+        elif self.frac3%frac4 == 0 or frac4%self.frac3 == 0:
+            self.corrDisplay.config(text = "Partial Credit")
+        else:
+            self.corrDisplay.config(text="Inorrect")
+
+
+
     def generate(self, click):
         self.var1.set(randint(1, 20))
         self.var2.set(randint(1, 20))
@@ -294,9 +329,10 @@ class FractionsHelper:
         self.denom2Entry.place(x=200, y=75)
 
         # solve button, when press will solve the given fractions
-        self.solveButton = Button(self.math, text="Solve")
-        self.solveButton.place(x=160, y=120)
-        self.solveButton.bind("<Button-1>", self.solve)
+        self.checkButton = Button(self.math, text="Check")
+        self.checkButton.place(x=160, y=120)
+        self.checkButton.bind("<Button-1>", self.check)
+
 
         # generate button, when pressed will generate fractions
         self.genButton = Button(self.math, text="Generate")
@@ -304,8 +340,12 @@ class FractionsHelper:
         self.genButton.bind("<Button-1>", self.generate)
 
         # display the answer
-        self.solveDisplay = Label(self.math, width=7, text="Answer")
-        self.solveDisplay.place(x=40, y=120)
+        self.ansDisplay = Label(self.math, width=7, text="Answer")
+        self.ansDisplay.place(x=40, y=120)
+
+        self.corrDisplay = Label(self.math, width=7, text= "new")
+        self.corrDisplay.place(x=60, y=150)
+
 
         # display the answer
         self.answerEntry = Entry(self.math, width=7, bg="lightgrey")
