@@ -72,42 +72,69 @@ class Login(Frame):
         self.password.pack()
 
         self.loginButton = Button(self,text="Sign in",
-                                  command=lambda:controller.show_frame(Menu))
+                                  command=lambda:controller.show_frame(Login))
         self.loginButton.pack(pady=(20, 10))
         self.loginButton.bind("<Button-1>", self.login_attempt)
 
         self.createButton = Button(self,text="Sign Up")
         self.createButton.pack(pady=(10))
-        self.createButton.bind(self,"<Button-1>", self.create_attempt)
+        self.createButton.bind("<Button-1>", self.create_attempt)
+
+        self.loggedIn = False
 
     def signIn(self, username, password):
+        connect = sqlite3.connect('FractionSolver.db')
+        login_info = connect.cursor()
+        # requires database stuff
+        login_info.execute("SELECT count(*) FROM login WHERE username = ? AND password = ?", (username, password))
+        count = login_info.fetchone()[0]
+        if count == 0:
+            print('There is no username with this name')
+            return False
+        else:
+            print('username exists in %s row(s)' % (count))
+        connect.close()
+        return True
+
+        # def  new_user(self, username, password):
+        # requires database stuff
+
+    def newUser(self, username, password):
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
         login_info.execute("SELECT count(*) FROM login WHERE username = ?", (username,))
         count = login_info.fetchone()[0]
-
         if count == 0:
             print('There is no user, works')
             login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, password))
             connect.commit()
         else:
-            print('user found in %s row(s)'%(count))
+            print('user found in %s row(s)' % (count))
 
         for row in login_info.execute('SELECT * FROM login'):
-            print (row)
+            print(row)
         connect.close()
         return True
 
     def login_attempt(self, click):
-        #requires database stuff
 
         attempt = self.signIn(self.username.get(),self.password.get())
+
+        if(attempt == False):
+            print("Invalid login")
+
+        else:
+            print("Valid login")
+            self.loggedIn = True
+            app.show_frame(Menu)
 
     def create_attempt(self, click):
 
         print("attempting to create account...")
         attempt = self.newUser(self.username.get(), self.password.get())
+
+
 
 
 class Menu(Frame):
