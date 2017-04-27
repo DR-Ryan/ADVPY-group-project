@@ -361,7 +361,11 @@ class Quizzer(Frame):
 
         self.strAns = self.answerEntry.get()
 
-        num, denom = self.strAns.split("/")
+        try:
+            num, denom = self.strAns.split("/")
+        except ValueError:
+            num = self.strAns
+            denom = '1'
         num1 = int(num)
         denom1 = int(denom)
         frac4 = Fraction(num1, denom1)
