@@ -6,6 +6,7 @@
 
 from random import randint
 from fractions import Fraction
+import sqlite3
 
 try:
     # for Python2
@@ -21,6 +22,12 @@ class Fractions(Tk):
 
         Tk.__init__(self, *args, **kwargs)
         container = Frame(self)
+
+        connect = sqlite3.connect('FractionSolver.db')
+        login_info = connect.cursor()
+        login_info.execute('''CREATE TABLE IF NOT EXISTS login (username text, password text)''')
+        connect.commit()
+        connect.close()
 
         container.pack(side = "top", fill = "both", expand = True)
 
@@ -49,6 +56,10 @@ class Login(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
                 # Why is this named question?
+
+        connect = sqlite3.connect('FractionSolver.db')
+        login_info = connect.cursor()
+
         self.question = Label(self,text="Login Screen", )
         self.question.pack(side="top")
 
@@ -63,22 +74,35 @@ class Login(Frame):
         self.loginButton = Button(self,text="Sign in",
                                   command=lambda:controller.show_frame(Menu))
         self.loginButton.pack(pady=(20, 10))
-        self.loginButton.bind("<Button-1>")
+        self.loginButton.bind("<Button-1>", self.login_attempt)
 
         self.createButton = Button(self,text="Sign Up")
         self.createButton.pack(pady=(10))
         self.createButton.bind(self,"<Button-1>", self.create_attempt)
 
     def signIn(self, username, password):
-        #requires database stuff
+        connect = sqlite3.connect('FractionSolver.db')
+        login_info = connect.cursor()
+
+        login_info.execute("SELECT count(*) FROM login WHERE username = ?", (username,))
+        count = login_info.fetchone()[0]
+
+        if count == 0:
+            print('There is no user, works')
+            login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, password))
+            connect.commit()
+        else:
+            print('user found in %s row(s)'%(count))
+
+        for row in login_info.execute('SELECT * FROM login'):
+            print (row)
+        connect.close()
         return True
 
     def login_attempt(self, click):
         #requires database stuff
 
         attempt = self.signIn(self.username.get(),self.password.get())
-
-        self.menu(self)
 
     def create_attempt(self, click):
 
