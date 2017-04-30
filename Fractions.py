@@ -9,6 +9,7 @@ from fractions import Fraction
 from bcrypt import hashpw, gensalt
 import sqlite3
 
+
 try:
     # for Python2
     from Tkinter import *   ## notice capitalized T in Tkinter
@@ -16,6 +17,7 @@ except ImportError:
     # for Python3
     from tkinter import *   ## notice lowercase 't' in tkinter here
 
+USERNAME = ''
 
 class Fractions(Tk):
 
@@ -26,7 +28,7 @@ class Fractions(Tk):
 
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
-        login_info.execute('''CREATE TABLE IF NOT EXISTS login (username VARCHAR, password VARCHAR)''')
+        login_info.execute('''CREATE TABLE IF NOT EXISTS login (username VARCHAR, password VARCHAR, operator VARCHAR(1), score real)''')
         connect.commit()
         connect.close()
 
@@ -85,6 +87,8 @@ class Login(Frame):
 
     def signIn(self, username, password):
 
+        global USERNAME
+        USERNAME = username
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
@@ -99,8 +103,8 @@ class Login(Frame):
                 else:
                     print('username exists in %s row(s)' % (count))
 
-                for row in login_info.execute('SELECT password FROM login'):
-                    print(row)
+                #for row in login_info.execute('SELECT * FROM login'):
+                #    print(row)
                 connect.close()
                 return True
         return False
@@ -120,8 +124,8 @@ class Login(Frame):
         else:
             print('user found in %s row(s)' % (count))
 
-        for row in login_info.execute('SELECT password FROM login'):
-            print(row)
+        # for row in login_info.execute('SELECT password FROM login'):
+        #     print(row)
         connect.close()
         return True
 
@@ -255,6 +259,7 @@ class Quizzer(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
         self.operator = IntVar()
+        self.op = ''
         self.var1 = StringVar()
         self.var2 = StringVar()
         self.var3 = StringVar()
@@ -323,15 +328,19 @@ class Quizzer(Frame):
     def operation(self):
         if str(self.operator.get()) == "1":
             self.operatorLabel.config(text='+')
+            self.op = '+'
             return self.frac1 + self.frac2
         elif str(self.operator.get()) == "2":
             self.operatorLabel.config(text='-')
+            self.op = '-'
             return self.frac1 - self.frac2
         elif str(self.operator.get()) == "3":
             self.operatorLabel.config(text='/')
+            self.op = '/'
             return self.frac1 / self.frac2
         elif str(self.operator.get()) == "4":
             self.operatorLabel.config(text='*')
+            self.op = '*'
             return self.frac1 * self.frac2
 
     def changeOp(self):
@@ -352,6 +361,8 @@ class Quizzer(Frame):
         self.var4.set(randint(1, 20))
 
     def check(self, click):
+        connect = sqlite3.connect('FractionSolver.db')
+        login_info = connect.cursor()
         self.userAns = self.answerEntry.get()
 
         self.num1 = int(self.var1.get())
@@ -364,6 +375,7 @@ class Quizzer(Frame):
 
         self.frac3 = Fraction()
         self.frac3 = self.operation()
+
 
         self.strFrac = str(self.frac3)
 
@@ -380,10 +392,16 @@ class Quizzer(Frame):
 
         if self.strAns == self.strFrac:
             self.corrDisplay.config(text = "Correct")
+            login_info.execute('''INSERT INTO login (username, operator, score) VALUES(?,?,?)''', (USERNAME, self.op, 1))
         elif self.frac3 % frac4 == 0:
             self.corrDisplay.config(text = "Partial Credit")
+            login_info.execute('''INSERT INTO login (username, operator, score) VALUES(?,?,?)''', (USERNAME, self.op, 0.5))
         else:
             self.corrDisplay.config(text="Incorrect")
+            login_info.execute('''INSERT INTO login (username, operator, score) VALUES(?,?,?)''', (USERNAME, self.op, 0))
+
+        connect.commit()
+        connect.close()
 
 class Results(Frame):
 
@@ -393,6 +411,59 @@ class Results(Frame):
         self.menu = Button(self, text = "Menu", command=lambda:controller.show_frame(Menu))
         self.menu.place(x = 450, y = 0)
         self.menu.bind("<Button-1>")
+        self.solveButton = Button(self, text="Submit")
+        self.solveButton.place(x=373, y=225)
+        self.solveButton.bind("<Button-1>", self.func1)
+
+    def func1(self, click):
+        connect = sqlite3.connect('FractionSolver.db')
+        login_info = connect.cursor()
+
+        # for user
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE username = '%s' AND operator = '+'" % USERNAME)
+        plus = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE username = '%s' AND operator = '-'" % USERNAME)
+        minus = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE username = '%s' AND operator = '*'" % USERNAME)
+        mult = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE username = '%s' AND operator = '/'" % USERNAME)
+        divide = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE username = '%s'" % USERNAME)
+        ops = login_info.fetchall()
+
+
+        #for all
+        login_info.execute("SELECT AVG(score) FROM login WHERE operator = '+'")
+        all_plus = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE operator = '-'")
+        all_minus = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE operator = '*'")
+        all_mult = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login WHERE operator = '/'")
+        all_divide = login_info.fetchall()
+
+        login_info.execute("SELECT AVG(score) FROM login")
+        all_ops = login_info.fetchall()
+
+
+        # test
+        for row in login_info.execute("SELECT AVG(score) FROM login"):
+            print(row)
+
+        for row in login_info.execute("SELECT * FROM login"):
+            print(row)
+        # end test
+
+        connect.commit()
+        connect.close()
 
 
 app = Fractions()
