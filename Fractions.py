@@ -87,6 +87,7 @@ class Login(Frame):
 
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
+
         for row in login_info.execute('SELECT password FROM login'):
             if hashpw(password.encode('utf8'),row[0]) == row[0]:
                 verification = hashpw(password.encode('utf8'),row[0])
@@ -98,10 +99,11 @@ class Login(Frame):
                 else:
                     print('username exists in %s row(s)' % (count))
 
-        for row in login_info.execute('SELECT password FROM login'):
-            print(row)
-        connect.close()
-        return True
+                for row in login_info.execute('SELECT password FROM login'):
+                    print(row)
+                connect.close()
+                return True
+        return False
 
     def newUser(self, username, password):
 
