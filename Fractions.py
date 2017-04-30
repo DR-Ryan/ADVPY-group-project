@@ -6,6 +6,7 @@
 
 from random import randint
 from fractions import Fraction
+from bcrypt import hashpw, gensalt
 import sqlite3
 
 try:
@@ -25,7 +26,7 @@ class Fractions(Tk):
 
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
-        login_info.execute('''CREATE TABLE IF NOT EXISTS login (username text, password text)''')
+        login_info.execute('''CREATE TABLE IF NOT EXISTS login (username VARCHAR, password VARCHAR)''')
         connect.commit()
         connect.close()
 
@@ -83,23 +84,28 @@ class Login(Frame):
         self.loggedIn = False
 
     def signIn(self, username, password):
+
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
-        # requires database stuff
-        login_info.execute("SELECT count(*) FROM login WHERE username = ? AND password = ?", (username, password))
-        count = login_info.fetchone()[0]
-        if count == 0:
-            print('There is no username with this name')
-            return False
-        else:
-            print('username exists in %s row(s)' % (count))
+        for row in login_info.execute('SELECT password FROM login'):
+            if hashpw(password.encode('utf8'),row[0]) == row[0]:
+                verification = hashpw(password.encode('utf8'),row[0])
+                login_info.execute("SELECT count(*) FROM login WHERE username = ? AND password = ?", (username, verification))
+                count = login_info.fetchone()[0]
+                if count == 0:
+                    print('There is no username with this name')
+                    return False
+                else:
+                    print('username exists in %s row(s)' % (count))
+
+        for row in login_info.execute('SELECT password FROM login'):
+            print(row)
         connect.close()
         return True
 
-        # def  new_user(self, username, password):
-        # requires database stuff
-
     def newUser(self, username, password):
+
+        hashed = hashpw(password.encode('utf8'),gensalt())
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
@@ -107,12 +113,12 @@ class Login(Frame):
         count = login_info.fetchone()[0]
         if count == 0:
             print('There is no user, works')
-            login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, password))
+            login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, hashed))
             connect.commit()
         else:
             print('user found in %s row(s)' % (count))
 
-        for row in login_info.execute('SELECT * FROM login'):
+        for row in login_info.execute('SELECT password FROM login'):
             print(row)
         connect.close()
         return True
