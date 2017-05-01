@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------#
 # Main project file now.                                            #
-# Authors: Ryan, Zack, Sterling, Ben                                #
+# Authors: Ryan, Zack, Ben, Sterling                                #
 #                                                                   #
 #-------------------------------------------------------------------#
 
@@ -57,12 +57,14 @@ class Fractions(Tk):
 
 
 class Login(Frame):
-''' Create login frame which deals with a user either entering into the main menu with a previously created username and password or creating a new one'''
+    ''' Create login frame which deals with a user either entering into the main menu with a previously created username and password or creating a new one'''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
-                # Why is this named question?
         self.question = Label(self,text="Login Screen", )
         self.question.pack(side="top")
+
+        self.login_status = Label(self,text="", )
+        self.login_status.pack(side="bottom")
 
         Label(self,text="Username").pack()
         self.username = Entry(self, width=20)
@@ -84,78 +86,57 @@ class Login(Frame):
         self.loggedIn = False
 
     def signIn(self, username, password):
-    ''' Verifies that a user exists and that their credentials are valid '''
-        #password = password.encode('utf-8')
+        ''' Verifies that a user exists and that their credentials are valid '''
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
-        #for row in login_info.execute('SELECT password FROM login'):
-            #if hashpw(password.encode('utf8'),row[0]) == row[0]:
-            #if hashpw(password,row[0]) == row[0]:
-                #verification = hashpw(password.encode('utf8'),row[0])
-                #verification = hashpw(password,row[0])
+
         login_info.execute("SELECT count(*) FROM login WHERE username = ? AND password = ?", (username, password))
         count = login_info.fetchone()[0]
         if count == 0:
-            print('There is no username with this name')
+            self.login_status.config(text = 'There is no username with this name')
             return False
-        else:
-            print('username exists in %s row(s)' % (count))
 
-                #for row in login_info.execute('SELECT * FROM login'):
-                #    print(row)
-                #connect.commit()
         connect.close()
-            #return True
-        #return False
+
         return True
 
     def newUser(self, username, password):
-    ''' Creates a new user and ensures that user does not already exist '''
-        #password = password.encode('utf-8')
-        #hashed = hashpw(password.encode('utf8'),gensalt())
-        #hashed = hashpw(password,gensalt())
+        ''' Creates a new user and ensures that user does not already exist '''
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
         login_info.execute("SELECT count(*) FROM login WHERE username = ?", (username,))
         count = login_info.fetchone()[0]
         if count == 0:
-            print('There is no user, works')
-            #login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, hashed))
             login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, password))
-        else:
-            print('user found in %s row(s)' % (count))
-
-        # for row in login_info.execute('SELECT password FROM login'):
-        #     print(row)
+            self.login_status.config(text = 'Account Created')
         connect.commit()
         connect.close()
         return True
 
     def login_attempt(self, click):
-    ''' Attempts to login a user if credentials are correct '''
+        ''' Attempts to login a user if credentials are correct '''
         global USERNAME
         USERNAME = self.username.get()
         attempt = self.signIn(self.username.get(),self.password.get())
 
         if(attempt == False):
-            print("Invalid login")
-
+            self.login_status.config(text = 'Invalid login')
         else:
-            print("Valid login")
+            self.login_status.config(text = 'Valid login')
             self.loggedIn = True
             app.show_frame(Menu)
 
     def create_attempt(self, click):
-    ''' Attempts to create a user if it does not exist '''
-        print("attempting to create account...")
+        ''' Attempts to create a user if it does not exist '''
+        self.login_status.config(text = 'attempting to create account...')
         attempt = self.newUser(self.username.get(), self.password.get())
 
 
 
 
 class Menu(Frame):
-
+    '''Allows the user to select which frame they want to go to.'''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
 
@@ -177,7 +158,7 @@ class Menu(Frame):
 
 
 class Solver(Frame):
-
+    '''Creates the logical placement of all the widgets and buttons'''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
 
@@ -230,7 +211,7 @@ class Solver(Frame):
 
 
     def operation(self):
-        print("Operation func")
+        '''Converts the radial button inputs into their corresponding operation'''
         if str(self.operator.get()) == "1":
             return self.frac1 + self.frac2
         elif str(self.operator.get()) == "2":
@@ -242,7 +223,7 @@ class Solver(Frame):
 
     # Function when pressing solve butotn
     def solve(self, click):
-        print("Solve func")
+        '''Solves it's inputs from the solver function'''
         self.num1 = int(self.num1Entry.get())
         self.num2 = int(self.denom1Entry.get())
 
@@ -260,7 +241,7 @@ class Solver(Frame):
         self.solveDisplay.config(text = self.frac3)
 
 class Quizzer(Frame):
-
+    '''Initializes the layout of the Frames'''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
         self.operator = IntVar()
@@ -271,33 +252,26 @@ class Quizzer(Frame):
         self.var4 = StringVar()
         self.correct = False
 
-        #self.menu = Button(self, text = "Menu", command=lambda:controller.show_frame(Menu))
         self.menu = Button(self, text = "Menu")
         self.menu.place(x = 450, y = 0)
-        #self.menu.bind("<Button-1>")
         self.menu.bind("<Button-1>", self.MENU)
 
         self.num1Entry = Label(self, width = 7, textvariable = self.var1)
-        #self.num1Entry.place(x = 165, y = 85)
 
         self.fbar = Label(self, width=5, text="______")
         self.fbar.place(x = 173, y = 105)
 
         self.denom1Entry = Label(self, width = 7, textvariable=self.var2)
-        #self.denom1Entry.place(x = 165, y = 140)
 
         self.operatorLabel = Label(self, width = 7)
         self.operatorLabel.place(x = 230, y = 110)
 
         self.num2Entry = Label(self, width=7, textvariable=self.var3)
-        #self.num2Entry.place(x = 285, y = 85)
 
         self.f2bar = Label(self, width=5, text="______")
         self.f2bar.place(x = 293, y = 105)
 
         self.denom2Entry = Label(self, width=7, textvariable=self.var4)
-        #self.denom2Entry.place(x = 285, y = 140)
-
 
         # generate button, when pressed will generate fractions
         self.genButton = Button(self, text="Generate")
@@ -334,22 +308,26 @@ class Quizzer(Frame):
         self.multiply.place(x=295, y = 225)
 
     def place(self):
+        '''Places the labeled entries, removed from init method to allow wiping it from the screen if the user decides to leaves the question without answering '''
         self.num1Entry.place(x = 165, y = 85)
         self.denom1Entry.place(x = 165, y = 140)
         self.num2Entry.place(x = 285, y = 85)
         self.denom2Entry.place(x = 285, y = 140)
 
     def forget(self):
+        '''Hides all of the labels from showing the fractions that they generated'''
         self.num1Entry.place_forget()
         self.denom1Entry.place_forget()
         self.num2Entry.place_forget()
         self.denom2Entry.place_forget()
 
     def MENU(self, click):
+        '''Directs us back to the main menu and wipes the screen'''
         self.forget()
         app.show_frame(Menu)
 
     def raise_partiallyCorrect(self):
+        '''Raises the pop up that tells us that the function was partially correct'''
         root = Toplevel()
         root.geometry("300x100")
         app1 = partiallyCorrect(root)
@@ -392,6 +370,7 @@ class Quizzer(Frame):
         self.correct = False
 
     def check(self, click):
+        '''Compares the entered in answer to the correct answer while allowing partial credit to recieve multiple attempts.'''
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
         self.userAns = self.answerEntry.get()
@@ -444,7 +423,7 @@ class partiallyCorrect(Frame):
 
 
 class Results(Frame):
-''' Results frame queries sqlite database table created previously and ses operator and score data to create plotly bar charts '''
+    ''' Results frame queries sqlite database table created previously and ses operator and score data to create plotly bar charts '''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
 
@@ -456,11 +435,10 @@ class Results(Frame):
         self.solveButton.bind("<Button-1>", self.Plotting)
 
     def Plotting(self, click):
-    ''' Queries the data from our sqlite table called login and uses plotly to create a barchart '''
+        ''' Queries the data from our sqlite table called login and uses plotly to create a barchart '''
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
-        # for user
 
         login_info.execute("SELECT AVG(score) FROM login WHERE username = '%s' AND operator = '+'" % USERNAME)
         plus = login_info.fetchall()
@@ -493,15 +471,6 @@ class Results(Frame):
 
         login_info.execute("SELECT AVG(score) FROM login")
         all_ops = login_info.fetchall()
-
-
-        # test
-        for row in login_info.execute("SELECT AVG(score) FROM login"):
-            print(row)
-
-        for row in login_info.execute("SELECT * FROM login"):
-            print(row)
-        # end test
 
         #connect.commit()
         connect.close()
