@@ -8,6 +8,9 @@ from random import randint
 from fractions import Fraction
 from bcrypt import hashpw, gensalt
 import sqlite3
+import plotly.plotly as py
+import plotly.graph_objs as go
+import plotly
 
 
 try:
@@ -49,7 +52,6 @@ class Fractions(Tk):
         self.show_frame(Login)
 
     def show_frame(self, cont):
-
         frame = self.frames[cont]
         frame.tkraise()
 
@@ -59,10 +61,6 @@ class Login(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
                 # Why is this named question?
-
-        connect = sqlite3.connect('FractionSolver.db')
-        login_info = connect.cursor()
-
         self.question = Label(self,text="Login Screen", )
         self.question.pack(side="top")
 
@@ -86,32 +84,34 @@ class Login(Frame):
         self.loggedIn = False
 
     def signIn(self, username, password):
-
-        global USERNAME
-        USERNAME = username
+        #password = password.encode('utf-8')
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
-
-        for row in login_info.execute('SELECT password FROM login'):
-            if hashpw(password.encode('utf8'),row[0]) == row[0]:
-                verification = hashpw(password.encode('utf8'),row[0])
-                login_info.execute("SELECT count(*) FROM login WHERE username = ? AND password = ?", (username, verification))
-                count = login_info.fetchone()[0]
-                if count == 0:
-                    print('There is no username with this name')
-                    return False
-                else:
-                    print('username exists in %s row(s)' % (count))
+        #for row in login_info.execute('SELECT password FROM login'):
+            #if hashpw(password.encode('utf8'),row[0]) == row[0]:
+            #if hashpw(password,row[0]) == row[0]:
+                #verification = hashpw(password.encode('utf8'),row[0])
+                #verification = hashpw(password,row[0])
+        login_info.execute("SELECT count(*) FROM login WHERE username = ? AND password = ?", (username, password))
+        count = login_info.fetchone()[0]
+        if count == 0:
+            print('There is no username with this name')
+            return False
+        else:
+            print('username exists in %s row(s)' % (count))
 
                 #for row in login_info.execute('SELECT * FROM login'):
                 #    print(row)
-                connect.close()
-                return True
-        return False
+                #connect.commit()
+        connect.close()
+            #return True
+        #return False
+        return True
 
     def newUser(self, username, password):
-
-        hashed = hashpw(password.encode('utf8'),gensalt())
+        #password = password.encode('utf-8')
+        #hashed = hashpw(password.encode('utf8'),gensalt())
+        #hashed = hashpw(password,gensalt())
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
@@ -119,18 +119,21 @@ class Login(Frame):
         count = login_info.fetchone()[0]
         if count == 0:
             print('There is no user, works')
-            login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, hashed))
-            connect.commit()
+            #login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, hashed))
+            login_info.execute('''INSERT INTO login (username, password) VALUES(?,?)''', (username, password))
         else:
             print('user found in %s row(s)' % (count))
 
         # for row in login_info.execute('SELECT password FROM login'):
         #     print(row)
+        connect.commit()
         connect.close()
         return True
 
     def login_attempt(self, click):
 
+        global USERNAME
+        USERNAME = self.username.get()
         attempt = self.signIn(self.username.get(),self.password.get())
 
         if(attempt == False):
@@ -264,31 +267,34 @@ class Quizzer(Frame):
         self.var2 = StringVar()
         self.var3 = StringVar()
         self.var4 = StringVar()
+        self.correct = False
 
-        self.menu = Button(self, text = "Menu", command=lambda:controller.show_frame(Menu))
+        #self.menu = Button(self, text = "Menu", command=lambda:controller.show_frame(Menu))
+        self.menu = Button(self, text = "Menu")
         self.menu.place(x = 450, y = 0)
-        self.menu.bind("<Button-1>")
+        #self.menu.bind("<Button-1>")
+        self.menu.bind("<Button-1>", self.MENU)
 
         self.num1Entry = Label(self, width = 7, textvariable = self.var1)
-        self.num1Entry.place(x = 165, y = 85)
+        #self.num1Entry.place(x = 165, y = 85)
 
         self.fbar = Label(self, width=5, text="______")
         self.fbar.place(x = 173, y = 105)
 
         self.denom1Entry = Label(self, width = 7, textvariable=self.var2)
-        self.denom1Entry.place(x = 165, y = 140)
+        #self.denom1Entry.place(x = 165, y = 140)
 
         self.operatorLabel = Label(self, width = 7)
         self.operatorLabel.place(x = 230, y = 110)
 
         self.num2Entry = Label(self, width=7, textvariable=self.var3)
-        self.num2Entry.place(x = 285, y = 85)
+        #self.num2Entry.place(x = 285, y = 85)
 
         self.f2bar = Label(self, width=5, text="______")
         self.f2bar.place(x = 293, y = 105)
 
         self.denom2Entry = Label(self, width=7, textvariable=self.var4)
-        self.denom2Entry.place(x = 285, y = 140)
+        #self.denom2Entry.place(x = 285, y = 140)
 
 
         # generate button, when pressed will generate fractions
@@ -325,6 +331,27 @@ class Quizzer(Frame):
         self.multiply = Radiobutton(self, text="*", variable=self.operator, value=4, command=self.changeOp)
         self.multiply.place(x=295, y = 225)
 
+    def place(self):
+        self.num1Entry.place(x = 165, y = 85)
+        self.denom1Entry.place(x = 165, y = 140)
+        self.num2Entry.place(x = 285, y = 85)
+        self.denom2Entry.place(x = 285, y = 140)
+
+    def forget(self):
+        self.num1Entry.place_forget()
+        self.denom1Entry.place_forget()
+        self.num2Entry.place_forget()
+        self.denom2Entry.place_forget()
+
+    def MENU(self, click):
+        self.forget()
+        app.show_frame(Menu)
+
+    def raise_partiallyCorrect(self):
+        root = Toplevel()
+        root.geometry("300x100")
+        app1 = partiallyCorrect(root)
+
     def operation(self):
         if str(self.operator.get()) == "1":
             self.operatorLabel.config(text='+')
@@ -359,6 +386,8 @@ class Quizzer(Frame):
         self.var2.set(randint(1, 20))
         self.var3.set(randint(1, 20))
         self.var4.set(randint(1, 20))
+        self.place()
+        self.correct = False
 
     def check(self, click):
         connect = sqlite3.connect('FractionSolver.db')
@@ -390,18 +419,27 @@ class Quizzer(Frame):
         denom1 = int(denom)
         frac4 = Fraction(num1, denom1)
 
-        if self.strAns == self.strFrac:
+        if self.strAns == self.strFrac and self.correct == False:
             self.corrDisplay.config(text = "Correct")
             login_info.execute('''INSERT INTO login (username, operator, score) VALUES(?,?,?)''', (USERNAME, self.op, 1))
-        elif self.frac3 % frac4 == 0:
+            self.correct = True
+        elif self.frac3 % frac4 == 0 and self.correct == False:
             self.corrDisplay.config(text = "Partial Credit")
             login_info.execute('''INSERT INTO login (username, operator, score) VALUES(?,?,?)''', (USERNAME, self.op, 0.5))
-        else:
+            self.raise_partiallyCorrect()
+        elif self.correct != True:
             self.corrDisplay.config(text="Incorrect")
             login_info.execute('''INSERT INTO login (username, operator, score) VALUES(?,?,?)''', (USERNAME, self.op, 0))
 
         connect.commit()
         connect.close()
+
+class partiallyCorrect(Frame):
+    def __init__(self,master):
+        Frame.__init__(self, master)
+        self.explanation = Label(master, text="Must Reduce Fractions For Full Credit.")
+        self.explanation.pack()
+
 
 class Results(Frame):
 
@@ -411,11 +449,11 @@ class Results(Frame):
         self.menu = Button(self, text = "Menu", command=lambda:controller.show_frame(Menu))
         self.menu.place(x = 450, y = 0)
         self.menu.bind("<Button-1>")
-        self.solveButton = Button(self, text="Submit")
-        self.solveButton.place(x=373, y=225)
-        self.solveButton.bind("<Button-1>", self.func1)
+        self.solveButton = Button(self, text="Get Results")
+        self.solveButton.place(x=205, y=150)
+        self.solveButton.bind("<Button-1>", self.Plotting)
 
-    def func1(self, click):
+    def Plotting(self, click):
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
@@ -462,9 +500,30 @@ class Results(Frame):
             print(row)
         # end test
 
-        connect.commit()
+        #connect.commit()
         connect.close()
 
+        plotly.tools.set_credentials_file(username='zwilliams013', api_key = '5ImO4kp7IoFPRSBqqMRE')
+
+        trace0 = go.Bar(
+            x = ['Add', 'Sub', 'Mult', 'Div','Sum'],
+            y = [plus[0][0], minus[0][0], mult[0][0], divide[0][0], ops[0][0]],
+            name = 'USER'
+            )
+        trace1 = go.Bar(
+            x = ['Add', 'Sub', 'Mult', 'Div','Sum'],
+            y = [all_plus[0][0], all_minus[0][0], all_mult[0][0], all_divide[0][0], all_ops[0][0]],
+            name = 'OVERALL'
+        )
+
+        data = [trace0, trace1]
+        layout = go.Layout(
+            xaxis=dict(tickangle=0),
+            barmode='group',
+        )
+
+        fig = go.Figure(data=data, layout=layout)
+        py.plot(fig,filename='Result Page')
 
 app = Fractions()
 app.geometry("525x325")
