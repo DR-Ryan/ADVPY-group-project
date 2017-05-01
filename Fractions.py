@@ -57,7 +57,7 @@ class Fractions(Tk):
 
 
 class Login(Frame):
-
+''' Create login frame which deals with a user either entering into the main menu with a previously created username and password or creating a new one'''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
                 # Why is this named question?
@@ -84,6 +84,7 @@ class Login(Frame):
         self.loggedIn = False
 
     def signIn(self, username, password):
+    ''' Verifies that a user exists and that their credentials are valid '''
         #password = password.encode('utf-8')
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
@@ -109,6 +110,7 @@ class Login(Frame):
         return True
 
     def newUser(self, username, password):
+    ''' Creates a new user and ensures that user does not already exist '''
         #password = password.encode('utf-8')
         #hashed = hashpw(password.encode('utf8'),gensalt())
         #hashed = hashpw(password,gensalt())
@@ -131,7 +133,7 @@ class Login(Frame):
         return True
 
     def login_attempt(self, click):
-
+    ''' Attempts to login a user if credentials are correct '''
         global USERNAME
         USERNAME = self.username.get()
         attempt = self.signIn(self.username.get(),self.password.get())
@@ -145,7 +147,7 @@ class Login(Frame):
             app.show_frame(Menu)
 
     def create_attempt(self, click):
-
+    ''' Attempts to create a user if it does not exist '''
         print("attempting to create account...")
         attempt = self.newUser(self.username.get(), self.password.get())
 
@@ -442,7 +444,7 @@ class partiallyCorrect(Frame):
 
 
 class Results(Frame):
-
+''' Results frame queries sqlite database table created previously and ses operator and score data to create plotly bar charts '''
     def __init__(self, parent, controller):
         Frame.__init__(self,parent)
 
@@ -454,6 +456,7 @@ class Results(Frame):
         self.solveButton.bind("<Button-1>", self.Plotting)
 
     def Plotting(self, click):
+    ''' Queries the data from our sqlite table called login and uses plotly to create a barchart '''
         connect = sqlite3.connect('FractionSolver.db')
         login_info = connect.cursor()
 
