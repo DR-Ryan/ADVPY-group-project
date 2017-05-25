@@ -475,7 +475,7 @@ class Results(Frame):
         #connect.commit()
         connect.close()
 
-        plotly.tools.set_credentials_file(username='zwilliams013', api_key = '5ImO4kp7IoFPRSBqqMRE')
+        plotly.tools.set_credentials_file(username=, api_key = )
 
         trace0 = go.Bar(
             x = ['Add', 'Sub', 'Mult', 'Div','Sum'],
